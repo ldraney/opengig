@@ -29,19 +29,35 @@ Want me to help you reach out?
 
 We just connect people. Payment happens between you.
 
-## Quick Start
+## Current Status: Alpha
+
+**What's working:**
+- npm package published (`npx opengig`)
+- LinkedIn OAuth edge function deployed
+- MCP server with 9 marketplace tools
+- Supabase backend configured
+
+**Blocker before production:**
+- RLS policies require Supabase Auth migration (see [Issue #1](https://github.com/ldraney/opengig/issues/1))
+- Currently writes to database will fail due to RLS
+
+## Quick Start (For Development)
 
 ```bash
-# Clone the repo
-git clone https://github.com/ldraney/opengig
-cd opengig
-npm install
+# Install
+npm install -g opengig
 
-# Configure (see Setup below)
-cp .env.example .env
+# Authenticate via LinkedIn
+opengig auth
 
 # Launch Claude Code with marketplace tools
-claude
+opengig
+```
+
+Or run directly:
+```bash
+npx opengig auth
+npx opengig
 ```
 
 Then just talk:
@@ -54,13 +70,13 @@ Then just talk:
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│  You run: claude (in opengig directory)                 │
+│  You run: opengig (or npx opengig)                      │
 └─────────────────────┬───────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────────┐
-│  Claude Code loads .mcp.json                            │
-│  → Starts opengig MCP server                            │
-│  → Reads CLAUDE.md for context                          │
+│  CLI checks auth, launches Claude Code                  │
+│  → Configures MCP server automatically                  │
+│  → Reads CLAUDE.md for AI context                       │
 └─────────────────────┬───────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────────┐
@@ -71,53 +87,10 @@ Then just talk:
                       ↓
 ┌─────────────────────────────────────────────────────────┐
 │  Supabase Backend                                       │
-│  • Users (LinkedIn-verified)                            │
+│  • Users (LinkedIn-verified, email must be verified)    │
 │  • Listings (jobs + availability)                       │
 │  • Messages + Contact Shares                            │
 └─────────────────────────────────────────────────────────┘
-```
-
-## Setup
-
-### 1. Create Supabase Project
-
-Go to [supabase.com](https://supabase.com) and create a free project.
-
-### 2. Run Database Migration
-
-In Supabase Dashboard → SQL Editor, paste contents of:
-```
-supabase/migrations/001_initial_schema.sql
-```
-
-### 3. Configure Environment
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env`:
-```bash
-OPENGIG_SUPABASE_URL=https://your-project.supabase.co
-OPENGIG_SUPABASE_ANON_KEY=your-anon-key
-```
-
-### 4. Create Test Session (For Development)
-
-```bash
-# First, insert a test user via Supabase SQL Editor:
-# INSERT INTO users (id, linkedin_id, linkedin_url, name, email, linkedin_account_age_years)
-# VALUES ('your-uuid-here', 'test', 'https://linkedin.com/in/you', 'Your Name', 'you@email.com', 2);
-
-# Then create local session:
-mkdir -p ~/.opengig
-echo '{"user_id":"your-uuid-here","access_token":"test","expires_at":"2026-01-01T00:00:00.000Z"}' > ~/.opengig/session.json
-```
-
-### 5. Launch
-
-```bash
-claude
 ```
 
 ## MCP Tools
@@ -136,63 +109,66 @@ claude
 
 ## Trust Model
 
-- LinkedIn OAuth required (account must be 1+ year old)
+- LinkedIn OAuth required
+- Email must be verified by LinkedIn
 - All profiles linked to real LinkedIn identities
 - Contact info only shared when you explicitly choose
-- Row-level security on all data
 
 ## Roadmap
 
 ### Phase 1: Core MVP ✅
 - [x] MCP server with marketplace tools
-- [x] Supabase schema with RLS
-- [x] Search listings (jobs/talent)
-- [x] Create listings
-- [x] Messaging system
-- [x] Contact sharing
+- [x] Supabase schema
+- [x] Search, create listings, messaging, contact sharing
+- [x] npm package published
+- [x] LinkedIn OAuth edge function deployed
 
-### Phase 2: Production Auth
-- [ ] Deploy LinkedIn OAuth edge function
-- [ ] Real account age verification
-- [ ] Session management via Supabase Auth
+### Phase 2: Production Auth 🚧 IN PROGRESS
+- [x] LinkedIn OAuth edge function
+- [x] Email verification as trust signal
+- [ ] **Migrate to Supabase Auth** (BLOCKER - RLS depends on this)
 - [ ] Profile sync from LinkedIn
 
 ### Phase 3: Distribution
-- [ ] Publish to npm (`npx opengig`)
-- [ ] CLI launcher auto-configures MCP
-- [ ] One-command onboarding
+- [x] Publish to npm
 - [ ] Landing page
+- [ ] Documentation site
 
 ### Phase 4: Growth Features
 - [ ] Email notifications
 - [ ] Saved searches / alerts
 - [ ] Listing expiration & renewal
 - [ ] Advanced search filters
-- [ ] Reputation signals from LinkedIn
 
 ### Phase 5: Monetization
 - [ ] Sponsored listings (pay to boost)
 - [ ] Featured placement in search
-- [ ] Analytics for posters
 - **Never transaction fees**
 
 ## Contributing
 
-Point Claude Code at this repo and help build:
-
 ```bash
 git clone https://github.com/ldraney/opengig
 cd opengig
-claude
-# "Help me implement email notifications for new messages"
+npm install
 ```
 
-### Key Areas Needing Work
+### Priority: Supabase Auth Migration
 
-- **Auth**: Deploy LinkedIn OAuth edge function
-- **Distribution**: npm package setup
-- **Testing**: Add test coverage
-- **Features**: Email notifications, search filters
+The biggest blocker is migrating from custom OAuth to Supabase Auth. See [Issue #1](https://github.com/ldraney/opengig/issues/1) for details.
+
+### Development Setup
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit with your Supabase credentials (or use defaults)
+# The npm package has production defaults baked in
+
+# Run in dev mode
+npm run dev
+```
 
 ## Architecture
 
@@ -200,15 +176,15 @@ claude
 opengig/
 ├── src/
 │   ├── index.ts        # CLI launcher
-│   ├── mcp-server.ts   # MCP server (the magic)
+│   ├── mcp-server.ts   # MCP server (9 tools)
 │   ├── types.ts        # TypeScript types
 │   └── lib/
 │       └── supabase.ts # Database + sessions
 ├── supabase/
 │   ├── migrations/     # Database schema
-│   └── functions/      # Edge functions
+│   └── functions/      # Edge functions (linkedin-auth)
 ├── .mcp.json           # Claude Code MCP config
-├── CLAUDE.md           # AI instructions
+├── CLAUDE.md           # AI assistant instructions
 └── README.md           # You are here
 ```
 
@@ -216,10 +192,6 @@ opengig/
 
 MIT
 
-## Revenue Model
-
-Sponsored search results. That's it. **Never transaction fees.**
-
 ---
 
-Built with [Claude Code](https://claude.ai/code) 🤖
+Built with [Claude Code](https://claude.ai/code)
