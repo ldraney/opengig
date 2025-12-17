@@ -9,6 +9,7 @@
  * 3. Launches Claude Code with opengig context
  */
 
+import 'dotenv/config';
 import { spawn } from 'child_process';
 import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
 import { homedir } from 'os';
