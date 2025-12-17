@@ -29,17 +29,14 @@ Want me to help you reach out?
 
 We just connect people. Payment happens between you.
 
-## Current Status: Alpha
+## Current Status: Production Ready (v0.2.0)
 
 **What's working:**
 - npm package published (`npx opengig`)
-- LinkedIn OAuth edge function deployed
+- LinkedIn OAuth via Supabase Auth (OIDC)
 - MCP server with 9 marketplace tools
-- Supabase backend configured
-
-**Blocker before production:**
-- RLS policies require Supabase Auth migration (see [Issue #1](https://github.com/ldraney/opengig/issues/1))
-- Currently writes to database will fail due to RLS
+- Supabase backend with RLS policies working
+- All CRUD operations functional
 
 ## Quick Start (For Development)
 
@@ -121,15 +118,14 @@ Then just talk:
 - [x] Supabase schema
 - [x] Search, create listings, messaging, contact sharing
 - [x] npm package published
-- [x] LinkedIn OAuth edge function deployed
 
-### Phase 2: Production Auth 🚧 IN PROGRESS
-- [x] LinkedIn OAuth edge function
+### Phase 2: Production Auth ✅
+- [x] LinkedIn OAuth via Supabase Auth (OIDC)
 - [x] Email verification as trust signal
-- [ ] **Migrate to Supabase Auth** (BLOCKER - RLS depends on this)
-- [ ] Profile sync from LinkedIn
+- [x] RLS policies working with `auth.uid()`
+- [x] Profile sync via database triggers
 
-### Phase 3: Distribution
+### Phase 3: Distribution 🚧 IN PROGRESS
 - [x] Publish to npm
 - [ ] Landing page
 - [ ] Documentation site
@@ -151,20 +147,6 @@ Then just talk:
 git clone https://github.com/ldraney/opengig
 cd opengig
 npm install
-```
-
-### Priority: Supabase Auth Migration
-
-The biggest blocker is migrating from custom OAuth to Supabase Auth. See [Issue #1](https://github.com/ldraney/opengig/issues/1) for details.
-
-### Development Setup
-
-```bash
-# Copy environment template
-cp .env.example .env
-
-# Edit with your Supabase credentials (or use defaults)
-# The npm package has production defaults baked in
 
 # Run in dev mode
 npm run dev

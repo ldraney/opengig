@@ -2,14 +2,15 @@
 
 export interface User {
   id: string;
-  linkedin_id: string;
-  linkedin_url: string;
+  linkedin_id?: string;
+  linkedin_url?: string;
   name: string;
   headline?: string;
   profile_pic?: string;
   email?: string;
+  email_verified?: boolean;
   phone?: string;
-  linkedin_account_age_years: number;
+  linkedin_account_age_years?: number;
   connection_count?: number;
   created_at: string;
   last_active: string;

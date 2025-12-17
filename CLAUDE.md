@@ -125,33 +125,28 @@ What would you like to share?
 
 # Developer Documentation
 
-## Current Status (v0.1.1)
+## Current Status (v0.2.0) - Production Ready
 
 **What's Deployed:**
-- npm package: `npx opengig` (v0.1.1)
-- LinkedIn OAuth edge function on Supabase
+- npm package: `npx opengig` (v0.2.0)
+- LinkedIn OAuth via Supabase Auth (OIDC)
 - MCP server with 9 marketplace tools
-- Supabase backend with schema
-
-**BLOCKER - Not Production Ready:**
-- RLS policies use `auth.uid()` which requires Supabase Auth
-- Currently using custom OAuth + local file sessions
-- **Writes to database will fail** until Supabase Auth migration is complete
-- See GitHub Issue #1 for migration plan
+- Supabase backend with RLS policies working
+- Database triggers sync auth users to app users
 
 ## Architecture
 
 ```
 opengig/
 ├── src/
-│   ├── index.ts        # CLI launcher
+│   ├── index.ts        # CLI launcher + Supabase OAuth flow
 │   ├── mcp-server.ts   # MCP server (9 tools)
 │   ├── types.ts        # TypeScript types
 │   └── lib/
-│       └── supabase.ts # Database client + session management
+│       └── supabase.ts # Database client + Supabase Auth session management
 ├── supabase/
-│   ├── migrations/     # Database schema (001, 002)
-│   └── functions/      # Edge functions (linkedin-auth deployed)
+│   ├── migrations/     # Database schema (001, 002, 003)
+│   └── functions/      # Edge functions (legacy, kept for reference)
 ├── .mcp.json           # MCP server config for Claude Code
 └── CLAUDE.md           # This file
 ```
@@ -169,12 +164,6 @@ npm install
 npm run dev
 ```
 
-For testing with local sessions:
-```bash
-mkdir -p ~/.opengig
-echo '{"user_id":"YOUR_USER_UUID","access_token":"test","expires_at":"2026-01-01T00:00:00.000Z"}' > ~/.opengig/session.json
-```
-
 ## Environment Variables
 
 All have defaults baked in. Override only if needed:
@@ -182,7 +171,6 @@ All have defaults baked in. Override only if needed:
 ```bash
 OPENGIG_SUPABASE_URL=https://przjsrayrbkqxdgshdxv.supabase.co  # default
 OPENGIG_SUPABASE_ANON_KEY=...                                   # default
-OPENGIG_LINKEDIN_CLIENT_ID=86la1itavie1yk                       # default
 ```
 
 ## Roadmap
@@ -192,15 +180,14 @@ OPENGIG_LINKEDIN_CLIENT_ID=86la1itavie1yk                       # default
 - [x] Supabase schema
 - [x] Search, create, message, share flows
 - [x] npm package published
-- [x] LinkedIn OAuth edge function deployed
 
-### Phase 2: Production Auth 🚧 IN PROGRESS
-- [x] LinkedIn OAuth edge function
+### Phase 2: Production Auth ✅ COMPLETE
+- [x] LinkedIn OAuth via Supabase Auth (OIDC)
 - [x] Email verification as trust signal
-- [ ] **BLOCKER: Migrate to Supabase Auth** (Issue #1)
-- [ ] Profile sync from LinkedIn
+- [x] RLS policies working with `auth.uid()`
+- [x] Profile sync via database triggers
 
-### Phase 3: Distribution
+### Phase 3: Distribution 🚧 IN PROGRESS
 - [x] Publish to npm
 - [ ] Landing page
 - [ ] Documentation
@@ -213,15 +200,3 @@ OPENGIG_LINKEDIN_CLIENT_ID=86la1itavie1yk                       # default
 ### Phase 5: Monetization
 - [ ] Sponsored listings
 - **Never transaction fees**
-
-## Next Priority: Supabase Auth Migration
-
-The current RLS policies require `auth.uid()` from Supabase Auth, but we're using custom LinkedIn OAuth. This means all database writes fail.
-
-**Migration involves:**
-1. Use Supabase's built-in LinkedIn OAuth provider
-2. Update CLI to use `supabase.auth.signInWithOAuth()`
-3. Update MCP server to use Supabase sessions
-4. RLS will "just work" with `auth.uid()`
-
-See GitHub Issue #1 for full details.

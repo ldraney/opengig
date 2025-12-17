@@ -10,19 +10,18 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import {
-  loadSession,
-  saveSession,
-  clearSession,
   getSupabase,
   getCurrentUser,
   isConfigured,
   ensureConfigDir,
+  isAuthenticated,
+  getSession,
 } from './lib/supabase.js';
 import type { Listing, User, Message } from './types.js';
 
 const server = new McpServer({
   name: 'opengig',
-  version: '0.1.0',
+  version: '0.2.0',
 });
 
 // ============================================
@@ -33,8 +32,8 @@ server.tool(
   'Check current authentication status and user profile',
   {},
   async () => {
-    const session = loadSession();
-    if (!session) {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
       return {
         content: [
           {
@@ -49,7 +48,30 @@ server.tool(
       };
     }
 
+    const session = await getSession();
     const user = await getCurrentUser();
+
+    // If user doesn't exist in our users table yet, return auth info
+    if (!user && session) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              authenticated: true,
+              user: {
+                id: session.user.id,
+                name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || 'User',
+                email: session.user.email,
+                email_verified: session.user.user_metadata?.email_verified,
+              },
+              note: 'User profile not yet synced to database',
+            }),
+          },
+        ],
+      };
+    }
+
     if (!user) {
       return {
         content: [
@@ -77,8 +99,8 @@ server.tool(
               headline: user.headline,
               linkedin_url: user.linkedin_url,
               email: user.email,
+              email_verified: user.email_verified,
               phone: user.phone,
-              linkedin_account_age_years: user.linkedin_account_age_years,
             },
           }),
         },

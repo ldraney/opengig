@@ -5,13 +5,13 @@
  *
  * This launcher:
  * 1. Ensures MCP server config exists
- * 2. Handles auth separately (needs browser)
+ * 2. Handles auth via Supabase LinkedIn OIDC
  * 3. Launches Claude Code with opengig context
  */
 
 import 'dotenv/config';
 import { spawn } from 'child_process';
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { homedir } from 'os';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -20,19 +20,25 @@ import chalk from 'chalk';
 import open from 'open';
 import { createServer } from 'http';
 import { URL } from 'url';
+import {
+  getSupabase,
+  getSupabaseUrl,
+  saveSupabaseSession,
+  clearSupabaseSession,
+  isAuthenticated,
+  getSession,
+  getCurrentUser,
+} from './lib/supabase.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-const CONFIG_DIR = join(homedir(), '.opengig');
-const SESSION_FILE = join(CONFIG_DIR, 'session.json');
 
 const program = new Command();
 
 program
   .name('opengig')
   .description('Free, open freelance marketplace. Terminal-native. AI-assisted. No fees ever.')
-  .version('0.1.0');
+  .version('0.2.0');
 
 // Main command - launches Claude Code with opengig
 program
@@ -40,7 +46,8 @@ program
   .description('Start opengig (launches Claude Code with marketplace tools)')
   .action(async () => {
     // Check if authenticated
-    if (!isAuthenticated()) {
+    const authenticated = await isAuthenticated();
+    if (!authenticated) {
       console.log(chalk.yellow('\n⚠️  Not logged in to opengig\n'));
       console.log('Run ' + chalk.cyan('npx opengig auth') + ' first to connect your LinkedIn account.\n');
       process.exit(1);
@@ -77,7 +84,7 @@ program
     });
   });
 
-// Auth command - handles LinkedIn OAuth
+// Auth command - handles LinkedIn OAuth via Supabase
 program
   .command('auth')
   .description('Authenticate with LinkedIn')
@@ -85,11 +92,19 @@ program
   .option('--status', 'Check authentication status')
   .action(async (options) => {
     if (options.status) {
-      if (isAuthenticated()) {
-        const session = JSON.parse(readFileSync(SESSION_FILE, 'utf-8'));
+      const authenticated = await isAuthenticated();
+      if (authenticated) {
+        const session = await getSession();
+        const user = await getCurrentUser();
         console.log(chalk.green('\n✓ Logged in'));
-        console.log(chalk.dim(`  User ID: ${session.user_id}`));
-        console.log(chalk.dim(`  Expires: ${new Date(session.expires_at).toLocaleDateString()}\n`));
+        if (user) {
+          console.log(chalk.dim(`  Name: ${user.name}`));
+          console.log(chalk.dim(`  Email: ${user.email || 'not set'}`));
+        }
+        if (session) {
+          console.log(chalk.dim(`  Expires: ${new Date(session.expires_at! * 1000).toLocaleDateString()}`));
+        }
+        console.log();
       } else {
         console.log(chalk.yellow('\n⚠️  Not logged in\n'));
       }
@@ -97,26 +112,19 @@ program
     }
 
     if (options.logout) {
-      if (existsSync(SESSION_FILE)) {
-        writeFileSync(SESSION_FILE, '{}');
-      }
+      const db = getSupabase();
+      await db.auth.signOut();
+      clearSupabaseSession();
       console.log(chalk.green('\n✓ Logged out\n'));
       return;
     }
-
-    // Production defaults (can be overridden via env vars)
-    const DEFAULT_SUPABASE_URL = 'https://przjsrayrbkqxdgshdxv.supabase.co';
-    const DEFAULT_LINKEDIN_CLIENT_ID = '86la1itavie1yk';
-
-    const supabaseUrl = process.env.OPENGIG_SUPABASE_URL || DEFAULT_SUPABASE_URL;
-    const linkedinClientId = process.env.OPENGIG_LINKEDIN_CLIENT_ID || DEFAULT_LINKEDIN_CLIENT_ID;
 
     console.log(chalk.bold('\n🔗 opengig - LinkedIn Authentication\n'));
     console.log(chalk.dim('Opening browser for LinkedIn login...'));
     console.log(chalk.dim('(LinkedIn email must be verified)\n'));
 
     try {
-      await performLinkedInAuth(linkedinClientId);
+      await performSupabaseAuth();
     } catch (error) {
       console.log(chalk.red(`\n❌ Authentication failed: ${error}\n`));
       process.exit(1);
@@ -144,21 +152,11 @@ program.parse();
 // Helper Functions
 // ============================================
 
-function isAuthenticated(): boolean {
-  if (!existsSync(SESSION_FILE)) return false;
-  try {
-    const session = JSON.parse(readFileSync(SESSION_FILE, 'utf-8'));
-    if (!session.user_id || !session.expires_at) return false;
-    return new Date(session.expires_at) > new Date();
-  } catch {
-    return false;
-  }
-}
-
 async function ensureMcpConfig(): Promise<void> {
   // Claude Code looks for MCP config in ~/.claude/claude_mcp_config.json
   const claudeDir = join(homedir(), '.claude');
   const mcpConfigPath = join(claudeDir, 'claude_mcp_config.json');
+  const { readFileSync } = await import('fs');
 
   if (!existsSync(claudeDir)) {
     mkdirSync(claudeDir, { recursive: true });
@@ -191,87 +189,73 @@ async function ensureMcpConfig(): Promise<void> {
   writeFileSync(mcpConfigPath, JSON.stringify(config, null, 2));
 }
 
-async function performLinkedInAuth(clientId: string): Promise<void> {
+async function performSupabaseAuth(): Promise<void> {
   return new Promise((resolve, reject) => {
-    const state = Math.random().toString(36).substring(2, 15);
-    const redirectUri = 'http://localhost:3847/callback';
+    const PORT = 3847;
+    const redirectTo = `http://localhost:${PORT}/callback`;
 
     const server = createServer(async (req, res) => {
-      const url = new URL(req.url || '', 'http://localhost:3847');
+      const url = new URL(req.url || '', `http://localhost:${PORT}`);
 
       if (url.pathname === '/callback') {
-        const code = url.searchParams.get('code');
-        const returnedState = url.searchParams.get('state');
+        // Supabase redirects with tokens in the URL fragment (#access_token=...)
+        // We need to serve a page that extracts them and sends them to us
+        if (url.hash || !url.searchParams.has('access_token')) {
+          // Serve a page that extracts hash params and posts them back
+          res.writeHead(200, { 'Content-Type': 'text/html' });
+          res.end(extractTokenPage(PORT));
+          return;
+        }
+
+        // Handle the token extraction callback
+        const accessToken = url.searchParams.get('access_token');
+        const refreshToken = url.searchParams.get('refresh_token');
+        const expiresIn = url.searchParams.get('expires_in');
         const error = url.searchParams.get('error');
+        const errorDescription = url.searchParams.get('error_description');
 
         if (error) {
           res.writeHead(400, { 'Content-Type': 'text/html' });
-          res.end(errorPage(error));
+          res.end(errorPage(errorDescription || error));
           server.close();
-          reject(new Error(error));
+          reject(new Error(errorDescription || error));
           return;
         }
 
-        if (returnedState !== state) {
+        if (!accessToken) {
           res.writeHead(400, { 'Content-Type': 'text/html' });
-          res.end(errorPage('Invalid state'));
+          res.end(errorPage('No access token received'));
           server.close();
-          reject(new Error('Invalid state parameter'));
-          return;
-        }
-
-        if (!code) {
-          res.writeHead(400, { 'Content-Type': 'text/html' });
-          res.end(errorPage('No code received'));
-          server.close();
-          reject(new Error('No authorization code'));
+          reject(new Error('No access token'));
           return;
         }
 
         try {
-          // Exchange code via Supabase edge function
-          const supabaseUrl = process.env.OPENGIG_SUPABASE_URL!;
-          const supabaseKey = process.env.OPENGIG_SUPABASE_ANON_KEY!;
+          const db = getSupabase();
 
-          const response = await fetch(`${supabaseUrl}/functions/v1/linkedin-auth`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${supabaseKey}`,
-            },
-            body: JSON.stringify({ code, redirectUri }),
+          // Set the session in Supabase client
+          const { data, error: sessionError } = await db.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken || '',
           });
 
-          if (!response.ok) {
-            const errorData = (await response.json()) as { message?: string };
-            throw new Error(errorData.message || 'Auth failed');
-          }
+          if (sessionError) throw sessionError;
+          if (!data.session) throw new Error('No session returned');
 
-          const data = (await response.json()) as {
-            userId: string;
-            accessToken: string;
-            expiresAt: string;
-            name: string;
-          };
+          // Save session to file for persistence
+          saveSupabaseSession(data.session);
 
-          // Save session
-          if (!existsSync(CONFIG_DIR)) {
-            mkdirSync(CONFIG_DIR, { recursive: true });
-          }
-          writeFileSync(
-            SESSION_FILE,
-            JSON.stringify({
-              user_id: data.userId,
-              access_token: data.accessToken,
-              expires_at: data.expiresAt,
-            })
-          );
+          // Get user info
+          const userName = data.session.user.user_metadata?.full_name ||
+                          data.session.user.user_metadata?.name ||
+                          data.session.user.email ||
+                          'User';
 
           res.writeHead(200, { 'Content-Type': 'text/html' });
-          res.end(successPage(data.name));
+          res.end(successPage(userName));
           server.close();
 
-          console.log(chalk.green(`\n✓ Welcome to opengig, ${data.name}!\n`));
+          console.log(chalk.green(`\n✓ Welcome to opengig, ${userName}!\n`));
           console.log('Run ' + chalk.cyan('npx opengig') + ' to start the marketplace.\n');
           resolve();
         } catch (err) {
@@ -280,21 +264,95 @@ async function performLinkedInAuth(clientId: string): Promise<void> {
           server.close();
           reject(err);
         }
+      } else if (url.pathname === '/token') {
+        // POST endpoint to receive tokens from the extraction page
+        let body = '';
+        req.on('data', chunk => { body += chunk; });
+        req.on('end', async () => {
+          try {
+            const params = new URLSearchParams(body);
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            const error = params.get('error');
+            const errorDescription = params.get('error_description');
+
+            if (error) {
+              res.writeHead(400, { 'Content-Type': 'text/html' });
+              res.end(errorPage(errorDescription || error));
+              server.close();
+              reject(new Error(errorDescription || error));
+              return;
+            }
+
+            if (!accessToken) {
+              res.writeHead(400, { 'Content-Type': 'text/html' });
+              res.end(errorPage('No access token received'));
+              server.close();
+              reject(new Error('No access token'));
+              return;
+            }
+
+            const db = getSupabase();
+
+            // Set the session in Supabase client
+            const { data, error: sessionError } = await db.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            });
+
+            if (sessionError) throw sessionError;
+            if (!data.session) throw new Error('No session returned');
+
+            // Save session to file for persistence
+            saveSupabaseSession(data.session);
+
+            // Get user info
+            const userName = data.session.user.user_metadata?.full_name ||
+                            data.session.user.user_metadata?.name ||
+                            data.session.user.email ||
+                            'User';
+
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(successPage(userName));
+            server.close();
+
+            console.log(chalk.green(`\n✓ Welcome to opengig, ${userName}!\n`));
+            console.log('Run ' + chalk.cyan('npx opengig') + ' to start the marketplace.\n');
+            resolve();
+          } catch (err) {
+            res.writeHead(500, { 'Content-Type': 'text/html' });
+            res.end(errorPage(String(err)));
+            server.close();
+            reject(err);
+          }
+        });
       } else {
         res.writeHead(404);
         res.end('Not found');
       }
     });
 
-    server.listen(3847, () => {
-      const authUrl = new URL('https://www.linkedin.com/oauth/v2/authorization');
-      authUrl.searchParams.set('response_type', 'code');
-      authUrl.searchParams.set('client_id', clientId);
-      authUrl.searchParams.set('redirect_uri', redirectUri);
-      authUrl.searchParams.set('state', state);
-      authUrl.searchParams.set('scope', 'openid profile email');
+    server.listen(PORT, async () => {
+      const db = getSupabase();
 
-      open(authUrl.toString());
+      // Use Supabase's built-in LinkedIn OIDC provider
+      const { data, error } = await db.auth.signInWithOAuth({
+        provider: 'linkedin_oidc',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (error) {
+        server.close();
+        reject(error);
+        return;
+      }
+
+      if (data.url) {
+        open(data.url);
+      }
     });
 
     // Timeout after 5 minutes
@@ -303,6 +361,36 @@ async function performLinkedInAuth(clientId: string): Promise<void> {
       reject(new Error('Authentication timed out'));
     }, 5 * 60 * 1000);
   });
+}
+
+// Page to extract tokens from URL hash (Supabase uses implicit grant)
+function extractTokenPage(port: number): string {
+  return `<!DOCTYPE html>
+<html><head><title>opengig - Authenticating...</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0a0a0a;color:#fff}
+.container{text-align:center}h1{color:#3b82f6}p{color:#888}
+</style></head><body>
+<div class="container"><h1>🔄 Authenticating...</h1><p>Please wait while we complete your login.</p></div>
+<script>
+  // Extract tokens from URL hash
+  const hash = window.location.hash.substring(1);
+  if (hash) {
+    // POST tokens to our local server
+    fetch('http://localhost:${port}/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: hash
+    }).then(r => r.text()).then(html => {
+      document.body.innerHTML = html;
+    }).catch(e => {
+      document.body.innerHTML = '<div class="container"><h1 style="color:#ef4444">✗ Error</h1><p>' + e + '</p></div>';
+    });
+  } else {
+    document.body.innerHTML = '<div class="container"><h1 style="color:#ef4444">✗ Error</h1><p>No authentication data received</p></div>';
+  }
+</script>
+</body></html>`;
 }
 
 function successPage(name: string): string {
