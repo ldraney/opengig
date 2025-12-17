@@ -134,11 +134,12 @@ What would you like to share?
 ## Current Status (v0.3.0) - Production Ready
 
 **What's Deployed:**
-- npm package: `npx opengig` (v0.2.0)
+- npm package: `npx opengig` (v0.3.0)
 - LinkedIn OAuth via Supabase Auth (OIDC)
-- MCP server with 9 marketplace tools
+- MCP server with 15 marketplace tools
 - Supabase backend with RLS policies working
 - Database triggers sync auth users to app users
+- Email notifications infrastructure (requires Resend API key)
 
 ## Architecture
 
@@ -146,13 +147,14 @@ What would you like to share?
 opengig/
 ├── src/
 │   ├── index.ts        # CLI launcher + Supabase OAuth flow
-│   ├── mcp-server.ts   # MCP server (9 tools)
+│   ├── mcp-server.ts   # MCP server (15 tools)
 │   ├── types.ts        # TypeScript types
 │   └── lib/
 │       └── supabase.ts # Database client + Supabase Auth session management
 ├── supabase/
-│   ├── migrations/     # Database schema (001, 002, 003)
-│   └── functions/      # Edge functions (legacy, kept for reference)
+│   ├── migrations/     # Database schema (001-005)
+│   └── functions/      # Edge functions (send-notifications)
+├── docs/               # Landing page & documentation
 ├── .mcp.json           # MCP server config for Claude Code
 └── CLAUDE.md           # This file
 ```
