@@ -28,3 +28,4 @@ coverage/
 
 # Local config
 .opengig/
+supabase/.temp/
