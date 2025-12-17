@@ -1,50 +1,21 @@
 # opengig
 
-Free, open freelance marketplace. Terminal-native. AI-assisted. No fees ever.
+**Free, open freelance marketplace. Terminal-native. AI-assisted. No fees ever.**
 
 ## What is this?
 
-opengig is a CLI that launches [Claude Code](https://claude.ai/code) with marketplace superpowers. Instead of building yet another web UI, we use AI as the interface:
+opengig turns [Claude Code](https://claude.ai/code) into a freelance marketplace. No web UI - just conversation:
 
 ```
 You: "I'm looking for React work, remote, around $80/hr"
 
-Claude: Found 5 matching jobs! Here are the top matches:
+Claude: Found 3 matching jobs! Here are the top ones:
 
-1. Senior React Developer at TechCorp
-   - $70-90/hr, fully remote
-   - Looking for: React, TypeScript, Node
+1. **React Native Developer** - FinTech Startup
+   - $70-100/hr, remote
+   - Skills: React Native, TypeScript, mobile
 
 Want me to help you reach out?
-```
-
-## How it works
-
-```
-npx opengig
-    ↓
-Launches Claude Code with MCP tools for:
-    - Searching jobs/talent
-    - Posting listings
-    - Messaging
-    - Sharing contact info
-    ↓
-You talk naturally, Claude handles the rest
-```
-
-## Quick Start
-
-```bash
-# 1. Authenticate with LinkedIn
-npx opengig auth
-
-# 2. Start the marketplace
-npx opengig
-
-# 3. Talk to Claude
-"I'm available for Python/Django work, $100/hr"
-"Find me someone who knows AWS and Terraform"
-"Check my messages"
 ```
 
 ## Why?
@@ -58,13 +29,55 @@ npx opengig
 
 We just connect people. Payment happens between you.
 
-## Trust Model
+## Quick Start
 
-- LinkedIn OAuth required (account must be 1+ year old)
-- All profiles linked to real LinkedIn identities
-- Contact info only shared when you explicitly choose
+```bash
+# Clone the repo
+git clone https://github.com/ldraney/opengig
+cd opengig
+npm install
 
-## Setup (For Development)
+# Configure (see Setup below)
+cp .env.example .env
+
+# Launch Claude Code with marketplace tools
+claude
+```
+
+Then just talk:
+- "I'm available for Python/Django work, $100/hr"
+- "Find me someone who knows AWS and Terraform"
+- "Check my messages"
+- "Share my email with Jane"
+
+## How it Works
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  You run: claude (in opengig directory)                 │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│  Claude Code loads .mcp.json                            │
+│  → Starts opengig MCP server                            │
+│  → Reads CLAUDE.md for context                          │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│  MCP Tools Available:                                   │
+│  • search_listings  • create_listing  • send_message    │
+│  • share_contact    • get_conversations  • auth_status  │
+└─────────────────────┬───────────────────────────────────┘
+                      ↓
+┌─────────────────────────────────────────────────────────┐
+│  Supabase Backend                                       │
+│  • Users (LinkedIn-verified)                            │
+│  • Listings (jobs + availability)                       │
+│  • Messages + Contact Shares                            │
+└─────────────────────────────────────────────────────────┘
+```
+
+## Setup
 
 ### 1. Create Supabase Project
 
@@ -72,75 +85,47 @@ Go to [supabase.com](https://supabase.com) and create a free project.
 
 ### 2. Run Database Migration
 
-```bash
-# Install Supabase CLI
-npm install -g supabase
-
-# Link to your project
-supabase link --project-ref your-project-ref
-
-# Run migration
-supabase db push
+In Supabase Dashboard → SQL Editor, paste contents of:
+```
+supabase/migrations/001_initial_schema.sql
 ```
 
-### 3. Deploy Edge Functions
+### 3. Configure Environment
 
 ```bash
-supabase functions deploy linkedin-auth
-supabase functions deploy ai-match
+cp .env.example .env
 ```
 
-### 4. Create LinkedIn App
+Edit `.env`:
+```bash
+OPENGIG_SUPABASE_URL=https://your-project.supabase.co
+OPENGIG_SUPABASE_ANON_KEY=your-anon-key
+```
 
-1. Go to [linkedin.com/developers](https://linkedin.com/developers)
-2. Create an app
-3. Add OAuth 2.0 redirect URL: `http://localhost:3847/callback`
-4. Request scopes: `openid`, `profile`, `email`
-
-### 5. Set Environment Variables
+### 4. Create Test Session (For Development)
 
 ```bash
-export OPENGIG_SUPABASE_URL=https://xxx.supabase.co
-export OPENGIG_SUPABASE_ANON_KEY=your-anon-key
-export OPENGIG_LINKEDIN_CLIENT_ID=your-client-id
+# First, insert a test user via Supabase SQL Editor:
+# INSERT INTO users (id, linkedin_id, linkedin_url, name, email, linkedin_account_age_years)
+# VALUES ('your-uuid-here', 'test', 'https://linkedin.com/in/you', 'Your Name', 'you@email.com', 2);
 
-# Optional: for AI-powered matching
-export ANTHROPIC_API_KEY=sk-ant-...
+# Then create local session:
+mkdir -p ~/.opengig
+echo '{"user_id":"your-uuid-here","access_token":"test","expires_at":"2026-01-01T00:00:00.000Z"}' > ~/.opengig/session.json
 ```
 
-### 6. Install Claude Code
+### 5. Launch
 
 ```bash
-npm install -g @anthropic-ai/claude-code
-```
-
-## Architecture
-
-```
-├── src/
-│   ├── index.ts        # Launcher (starts Claude Code)
-│   ├── mcp-server.ts   # MCP server (provides tools to Claude)
-│   ├── types.ts        # TypeScript types
-│   └── lib/
-│       └── supabase.ts # Database client
-│
-├── supabase/
-│   ├── migrations/     # Database schema
-│   └── functions/      # Edge functions
-│       ├── linkedin-auth/
-│       └── ai-match/
-│
-└── CLAUDE.md           # Instructions for Claude
+claude
 ```
 
 ## MCP Tools
 
-The MCP server provides these tools to Claude:
-
 | Tool | Description |
 |------|-------------|
-| `auth_status` | Check login state |
-| `create_listing` | Post job or availability |
+| `auth_status` | Check login state and profile |
+| `create_listing` | Post a job or availability |
 | `search_listings` | Find jobs or talent |
 | `get_conversations` | List message threads |
 | `send_message` | Message someone |
@@ -149,30 +134,92 @@ The MCP server provides these tools to Claude:
 | `get_my_listings` | View your listings |
 | `deactivate_listing` | Remove a listing |
 
+## Trust Model
+
+- LinkedIn OAuth required (account must be 1+ year old)
+- All profiles linked to real LinkedIn identities
+- Contact info only shared when you explicitly choose
+- Row-level security on all data
+
+## Roadmap
+
+### Phase 1: Core MVP ✅
+- [x] MCP server with marketplace tools
+- [x] Supabase schema with RLS
+- [x] Search listings (jobs/talent)
+- [x] Create listings
+- [x] Messaging system
+- [x] Contact sharing
+
+### Phase 2: Production Auth
+- [ ] Deploy LinkedIn OAuth edge function
+- [ ] Real account age verification
+- [ ] Session management via Supabase Auth
+- [ ] Profile sync from LinkedIn
+
+### Phase 3: Distribution
+- [ ] Publish to npm (`npx opengig`)
+- [ ] CLI launcher auto-configures MCP
+- [ ] One-command onboarding
+- [ ] Landing page
+
+### Phase 4: Growth Features
+- [ ] Email notifications
+- [ ] Saved searches / alerts
+- [ ] Listing expiration & renewal
+- [ ] Advanced search filters
+- [ ] Reputation signals from LinkedIn
+
+### Phase 5: Monetization
+- [ ] Sponsored listings (pay to boost)
+- [ ] Featured placement in search
+- [ ] Analytics for posters
+- **Never transaction fees**
+
 ## Contributing
 
-Point Claude Code at this repo and help build it:
+Point Claude Code at this repo and help build:
 
 ```bash
 git clone https://github.com/ldraney/opengig
 cd opengig
 claude
-# "Help me add email notifications for new messages"
+# "Help me implement email notifications for new messages"
 ```
 
-### Roadmap
+### Key Areas Needing Work
 
-- [ ] Real LinkedIn account age verification
-- [ ] Email notifications
-- [ ] Profile editing
-- [ ] Listing expiration
-- [ ] Search filters
-- [ ] Mobile-friendly auth flow
+- **Auth**: Deploy LinkedIn OAuth edge function
+- **Distribution**: npm package setup
+- **Testing**: Add test coverage
+- **Features**: Email notifications, search filters
+
+## Architecture
+
+```
+opengig/
+├── src/
+│   ├── index.ts        # CLI launcher
+│   ├── mcp-server.ts   # MCP server (the magic)
+│   ├── types.ts        # TypeScript types
+│   └── lib/
+│       └── supabase.ts # Database + sessions
+├── supabase/
+│   ├── migrations/     # Database schema
+│   └── functions/      # Edge functions
+├── .mcp.json           # Claude Code MCP config
+├── CLAUDE.md           # AI instructions
+└── README.md           # You are here
+```
 
 ## License
 
 MIT
 
-## Revenue Model (Eventually)
+## Revenue Model
 
-Sponsored search results. That's it. Never transaction fees.
+Sponsored search results. That's it. **Never transaction fees.**
+
+---
+
+Built with [Claude Code](https://claude.ai/code) 🤖
