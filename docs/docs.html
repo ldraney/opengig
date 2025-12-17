@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - opengig</title>
+    <meta name="description" content="Learn how to use opengig - the zero-fee freelance marketplace.">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --bg-secondary: #161b22;
+            --text: #e6edf3;
+            --text-muted: #8b949e;
+            --accent: #58a6ff;
+            --accent-hover: #79b8ff;
+            --green: #3fb950;
+            --yellow: #d29922;
+            --border: #30363d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            z-index: 100;
+        }
+
+        header .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text);
+            text-decoration: none;
+        }
+
+        .logo span {
+            color: var(--accent);
+        }
+
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 24px;
+            transition: color 0.2s;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--text);
+        }
+
+        /* Layout */
+        .docs-layout {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            padding: 32px 24px;
+            border-right: 1px solid var(--border);
+            position: sticky;
+            top: 73px;
+            height: calc(100vh - 73px);
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-section h3 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .sidebar-section a {
+            display: block;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 6px 0;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+
+        .sidebar-section a:hover, .sidebar-section a.active {
+            color: var(--accent);
+        }
+
+        /* Content */
+        .content {
+            flex: 1;
+            padding: 32px 48px;
+            max-width: 800px;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+        }
+
+        .content h2 {
+            font-size: 1.5rem;
+            margin-top: 48px;
+            margin-bottom: 16px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .content h2:first-of-type {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .content h3 {
+            font-size: 1.2rem;
+            margin-top: 32px;
+            margin-bottom: 12px;
+        }
+
+        .content p {
+            margin-bottom: 16px;
+            color: var(--text);
+        }
+
+        .content ul, .content ol {
+            margin-bottom: 16px;
+            padding-left: 24px;
+        }
+
+        .content li {
+            margin-bottom: 8px;
+        }
+
+        .content a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .content a:hover {
+            text-decoration: underline;
+        }
+
+        /* Code blocks */
+        code {
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+            background: var(--bg-secondary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+        }
+
+        /* Callouts */
+        .callout {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            border-left: 4px solid;
+        }
+
+        .callout-info {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: var(--accent);
+        }
+
+        .callout-warning {
+            background: rgba(210, 153, 34, 0.1);
+            border-color: var(--yellow);
+        }
+
+        .callout-success {
+            background: rgba(63, 185, 80, 0.1);
+            border-color: var(--green);
+        }
+
+        .callout strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Mobile */
+        @media (max-width: 900px) {
+            .docs-layout {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                position: static;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .content {
+                padding: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/opengig/" class="logo">open<span>gig</span></a>
+            <nav>
+                <a href="/opengig/">Home</a>
+                <a href="/opengig/docs.html" class="active">Docs</a>
+                <a href="https://github.com/ldraney/opengig">GitHub</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="docs-layout">
+        <aside class="sidebar">
+            <div class="sidebar-section">
+                <h3>Getting Started</h3>
+                <a href="#installation">Installation</a>
+                <a href="#authentication">Authentication</a>
+                <a href="#first-steps">First Steps</a>
+            </div>
+            <div class="sidebar-section">
+                <h3>Using opengig</h3>
+                <a href="#finding-work">Finding Work</a>
+                <a href="#hiring">Hiring Talent</a>
+                <a href="#messaging">Messaging</a>
+                <a href="#sharing-contacts">Sharing Contacts</a>
+            </div>
+            <div class="sidebar-section">
+                <h3>Reference</h3>
+                <a href="#tools">MCP Tools</a>
+                <a href="#trust-model">Trust Model</a>
+                <a href="#troubleshooting">Troubleshooting</a>
+            </div>
+        </aside>
+
+        <main class="content">
+            <h1>Documentation</h1>
+            <p>Everything you need to know to use opengig - the zero-fee freelance marketplace.</p>
+
+            <h2 id="installation">Installation</h2>
+            <p>opengig requires <a href="https://nodejs.org">Node.js 18+</a> and <a href="https://claude.ai/code">Claude Code</a>.</p>
+
+            <h3>Quick Install</h3>
+            <p>The fastest way to get started is using npx (no installation required):</p>
+            <pre><code>npx opengig auth    # One-time authentication
+npx opengig         # Launch the marketplace</code></pre>
+
+            <h3>Global Install</h3>
+            <p>For frequent use, install globally:</p>
+            <pre><code>npm install -g opengig
+
+opengig auth
+opengig</code></pre>
+
+            <div class="callout callout-info">
+                <strong>Note</strong>
+                opengig launches Claude Code with marketplace tools configured. Make sure you have Claude Code installed first.
+            </div>
+
+            <h2 id="authentication">Authentication</h2>
+            <p>opengig uses LinkedIn OAuth for identity verification. This ensures all users are real people with professional profiles.</p>
+
+            <h3>Sign In</h3>
+            <pre><code>npx opengig auth</code></pre>
+
+            <p>This will:</p>
+            <ol>
+                <li>Open your browser to LinkedIn</li>
+                <li>Request permission to verify your identity</li>
+                <li>Save your session locally (in <code>~/.opengig/</code>)</li>
+            </ol>
+
+            <h3>Check Status</h3>
+            <p>Once in Claude Code, you can check your auth status:</p>
+            <pre><code>You: Am I logged in?
+
+Claude: Yes! You're authenticated as Jane Smith (jane@example.com).
+Your LinkedIn profile is verified.</code></pre>
+
+            <h3>Sign Out</h3>
+            <p>To sign out, delete your local session:</p>
+            <pre><code>rm -rf ~/.opengig</code></pre>
+
+            <h2 id="first-steps">First Steps</h2>
+            <p>After authentication, run <code>npx opengig</code> to launch Claude Code with marketplace tools.</p>
+
+            <p>Try these commands:</p>
+            <pre><code># Check your profile
+You: What's my profile look like?
+
+# Search for opportunities
+You: Find React jobs, remote, $80-100/hr
+
+# Post your availability
+You: I'm available for Python/Django work, $90/hr</code></pre>
+
+            <h2 id="finding-work">Finding Work</h2>
+            <p>Search for job opportunities using natural language:</p>
+
+            <pre><code>You: I'm looking for React Native work, remote, around $85/hr
+
+Claude: Found 4 matching jobs! Here are the top ones:
+
+1. **Mobile Developer** - FinTech Startup
+   - $80-100/hr, fully remote
+   - Skills: React Native, TypeScript
+   - Posted 2 days ago
+
+2. **Senior RN Engineer** - HealthTech
+   - $90-120/hr, remote (US timezone)
+   - Skills: React Native, Redux, GraphQL
+
+Want me to help you reach out to any of these?</code></pre>
+
+            <h3>Search Tips</h3>
+            <ul>
+                <li>Be specific about skills: "React" vs "React Native" vs "React + Node"</li>
+                <li>Mention your rate range to filter better matches</li>
+                <li>Specify remote preference: "remote only", "hybrid OK", "on-site in NYC"</li>
+            </ul>
+
+            <h2 id="hiring">Hiring Talent</h2>
+            <p>Find freelancers by describing what you need:</p>
+
+            <pre><code>You: I need someone who knows AWS, Terraform, and has DevOps experience
+
+Claude: Found 3 available freelancers matching your needs:
+
+1. **DevOps Engineer** - Mike Chen
+   - $100-130/hr, available immediately
+   - Skills: AWS, Terraform, Kubernetes, CI/CD
+   - 8 years experience
+
+2. **Cloud Architect** - Sarah Johnson
+   - $120-150/hr, available next week
+   - Skills: AWS, GCP, Terraform, Docker
+
+Should I help you reach out?</code></pre>
+
+            <h3>Posting a Job</h3>
+            <p>Create a job listing to attract candidates:</p>
+            <pre><code>You: Post a job for a senior backend engineer, Python/Django,
+$100-130/hr, remote, need someone to build our API
+
+Claude: I'll create that listing for you:
+
+**Senior Backend Engineer**
+- Rate: $100-130/hr
+- Remote: Yes
+- Skills: Python, Django, API development
+
+Your listing is now live! Candidates can find it when searching.</code></pre>
+
+            <h2 id="messaging">Messaging</h2>
+            <p>Communicate with potential clients or freelancers:</p>
+
+            <h3>Starting a Conversation</h3>
+            <pre><code>You: Message the first person about working together
+
+Claude: I'll send a message to Mike Chen:
+
+"Hi Mike! I saw your profile and I'm interested in your DevOps
+experience. We're looking for help with our AWS infrastructure.
+Would you be open to chatting?"
+
+Sent! You'll be notified when they respond.</code></pre>
+
+            <h3>Checking Messages</h3>
+            <pre><code>You: Check my messages
+
+Claude: You have 2 conversations:
+
+1. **Mike Chen** - Last message 2 hours ago
+   "Sure, I'd love to chat! What's your timeline?"
+
+2. **TechCorp Hiring** - Last message yesterday
+   "Thanks for applying. Can you share more about your React experience?"
+
+Want me to help you respond to either?</code></pre>
+
+            <h2 id="sharing-contacts">Sharing Contacts</h2>
+            <p>When you're ready to take the conversation off-platform:</p>
+
+            <pre><code>You: Share my email with Mike
+
+Claude: I'll share your contact info with Mike Chen:
+- Email: jane@example.com
+
+Should I also include your LinkedIn? [Yes/No]
+
+You: Yes
+
+Claude: Done! I've shared:
+- Email: jane@example.com
+- LinkedIn: linkedin.com/in/janesmith
+
+Mike will receive your contact info and can reach out directly.</code></pre>
+
+            <div class="callout callout-success">
+                <strong>No fees, ever</strong>
+                Once you have each other's contact info, you negotiate and pay directly. opengig never takes a cut.
+            </div>
+
+            <h2 id="tools">MCP Tools Reference</h2>
+            <p>opengig provides these tools to Claude Code:</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tool</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>auth_status</code></td>
+                        <td>Check login state and view your profile</td>
+                    </tr>
+                    <tr>
+                        <td><code>create_listing</code></td>
+                        <td>Post a job or availability listing</td>
+                    </tr>
+                    <tr>
+                        <td><code>search_listings</code></td>
+                        <td>Search for jobs or available talent</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_conversations</code></td>
+                        <td>List all your message threads</td>
+                    </tr>
+                    <tr>
+                        <td><code>send_message</code></td>
+                        <td>Send a message to another user</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_messages</code></td>
+                        <td>Read messages in a conversation</td>
+                    </tr>
+                    <tr>
+                        <td><code>share_contact</code></td>
+                        <td>Share your contact info with someone</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_my_listings</code></td>
+                        <td>View your active listings</td>
+                    </tr>
+                    <tr>
+                        <td><code>deactivate_listing</code></td>
+                        <td>Remove one of your listings</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2 id="trust-model">Trust Model</h2>
+            <p>opengig uses LinkedIn for identity verification:</p>
+
+            <ul>
+                <li><strong>LinkedIn OAuth</strong> - All users sign in with LinkedIn</li>
+                <li><strong>Email Verification</strong> - Only accounts with verified emails</li>
+                <li><strong>Real Profiles</strong> - Linked to actual LinkedIn identities</li>
+                <li><strong>Consent-Based Sharing</strong> - Contact info only shared when you explicitly choose</li>
+            </ul>
+
+            <div class="callout callout-warning">
+                <strong>Stay Safe</strong>
+                While we verify LinkedIn identities, always do your own due diligence before sharing sensitive information or starting paid work. Use contracts and secure payment methods.
+            </div>
+
+            <h2 id="troubleshooting">Troubleshooting</h2>
+
+            <h3>Authentication Issues</h3>
+            <p><strong>Problem:</strong> "Not authenticated" error</p>
+            <pre><code># Clear your session and re-authenticate
+rm -rf ~/.opengig
+npx opengig auth</code></pre>
+
+            <h3>Claude Code Not Found</h3>
+            <p><strong>Problem:</strong> opengig can't launch Claude Code</p>
+            <p>Make sure Claude Code is installed and in your PATH:</p>
+            <pre><code># Check if claude is available
+which claude
+
+# If not, install Claude Code from https://claude.ai/code</code></pre>
+
+            <h3>MCP Tools Not Loading</h3>
+            <p><strong>Problem:</strong> Claude doesn't have marketplace tools</p>
+            <p>Try restarting with a fresh session:</p>
+            <pre><code># Exit Claude Code and re-run
+npx opengig</code></pre>
+
+            <h3>Need More Help?</h3>
+            <p>Open an issue on <a href="https://github.com/ldraney/opengig/issues">GitHub</a>.</p>
+        </main>
+    </div>
+</body>
+</html>

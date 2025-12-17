@@ -187,10 +187,10 @@ OPENGIG_SUPABASE_ANON_KEY=...                                   # default
 - [x] RLS policies working with `auth.uid()`
 - [x] Profile sync via database triggers
 
-### Phase 3: Distribution 🚧 IN PROGRESS
+### Phase 3: Distribution ✅
 - [x] Publish to npm
 - [x] Landing page ([ldraney.github.io/opengig](https://ldraney.github.io/opengig/))
-- [ ] Documentation
+- [x] Documentation ([docs](https://ldraney.github.io/opengig/docs.html))
 
 ### Phase 4: Growth Features
 - [ ] Email notifications
