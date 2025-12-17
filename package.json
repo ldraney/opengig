@@ -1,6 +1,6 @@
 {
   "name": "opengig",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Free, open freelance marketplace. Terminal-native. AI-assisted. No fees ever.",
   "main": "dist/index.js",
   "bin": {
