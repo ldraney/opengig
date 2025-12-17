@@ -127,7 +127,7 @@ Then just talk:
 
 ### Phase 3: Distribution 🚧 IN PROGRESS
 - [x] Publish to npm
-- [ ] Landing page
+- [x] Landing page ([ldraney.github.io/opengig](https://ldraney.github.io/opengig/))
 - [ ] Documentation site
 
 ### Phase 4: Growth Features
