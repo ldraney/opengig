@@ -90,10 +90,20 @@ serve(async (req) => {
 
     const profile: LinkedInProfile = await profileResponse.json();
 
-    // Calculate approximate account age (LinkedIn doesn't provide this directly)
-    // For MVP, we'll require users to self-attest or verify another way
-    // In production, you might use LinkedIn's /me endpoint with additional scopes
-    const linkedinAccountAgeYears = await estimateAccountAge(tokenData.access_token);
+    // Require verified email as trust signal
+    // LinkedIn has already validated this email belongs to the user
+    if (!profile.email_verified) {
+      return new Response(
+        JSON.stringify({
+          error: 'Email not verified',
+          message: 'Your LinkedIn email must be verified to use opengig. Please verify your email in LinkedIn settings.',
+        }),
+        {
+          status: 403,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     // Create Supabase client with service role
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -105,7 +115,7 @@ serve(async (req) => {
       name: profile.name,
       profile_pic: profile.picture,
       email: profile.email,
-      linkedin_account_age_years: linkedinAccountAgeYears,
+      email_verified: profile.email_verified,
       last_active: new Date().toISOString(),
     };
 
@@ -125,21 +135,6 @@ serve(async (req) => {
         .eq('id', existingUser.id);
       userId = existingUser.id;
     } else {
-      // Check account age requirement
-      if (linkedinAccountAgeYears < 1) {
-        return new Response(
-          JSON.stringify({
-            error: 'Account too new',
-            message: 'Your LinkedIn account must be at least 1 year old to use opengig',
-            linkedinAccountAgeYears,
-          }),
-          {
-            status: 403,
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
       // Create new user
       const { data: newUser, error: insertError } = await supabase
         .from('users')
@@ -168,7 +163,7 @@ serve(async (req) => {
         accessToken: tokenData.access_token,
         expiresAt: expiresAt.toISOString(),
         name: profile.name,
-        linkedinAccountAgeYears,
+        email: profile.email,
       }),
       {
         status: 200,
@@ -186,27 +181,3 @@ serve(async (req) => {
     });
   }
 });
-
-// Estimate LinkedIn account age
-// Note: This is a simplified approach. In production, you might want to:
-// 1. Use LinkedIn's additional APIs if available
-// 2. Request users verify their account age
-// 3. Use position/education start dates as proxy
-async function estimateAccountAge(accessToken: string): Promise<number> {
-  try {
-    // Try to get profile positions to estimate account age
-    // LinkedIn's v2 API requires specific permissions for this
-    // For MVP, we'll default to accepting the user and letting them self-attest
-
-    // In a real implementation, you could:
-    // - Check earliest position start date
-    // - Check earliest education start date
-    // - Use member registration date if available via partner API
-
-    // For now, return a default that requires manual verification
-    // or implement a verification flow
-    return 1; // Default to 1 year, implement proper check in production
-  } catch {
-    return 0;
-  }
-}

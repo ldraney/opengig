@@ -104,22 +104,16 @@ program
       return;
     }
 
-    // Check for required env vars
-    const supabaseUrl = process.env.OPENGIG_SUPABASE_URL;
-    const linkedinClientId = process.env.OPENGIG_LINKEDIN_CLIENT_ID;
+    // Production defaults (can be overridden via env vars)
+    const DEFAULT_SUPABASE_URL = 'https://przjsrayrbkqxdgshdxv.supabase.co';
+    const DEFAULT_LINKEDIN_CLIENT_ID = '86la1itavie1yk';
 
-    if (!supabaseUrl || !linkedinClientId) {
-      console.log(chalk.red('\n❌ Missing configuration\n'));
-      console.log('Set these environment variables:');
-      console.log(chalk.dim('  OPENGIG_SUPABASE_URL=https://xxx.supabase.co'));
-      console.log(chalk.dim('  OPENGIG_SUPABASE_ANON_KEY=your-anon-key'));
-      console.log(chalk.dim('  OPENGIG_LINKEDIN_CLIENT_ID=your-client-id\n'));
-      process.exit(1);
-    }
+    const supabaseUrl = process.env.OPENGIG_SUPABASE_URL || DEFAULT_SUPABASE_URL;
+    const linkedinClientId = process.env.OPENGIG_LINKEDIN_CLIENT_ID || DEFAULT_LINKEDIN_CLIENT_ID;
 
     console.log(chalk.bold('\n🔗 opengig - LinkedIn Authentication\n'));
     console.log(chalk.dim('Opening browser for LinkedIn login...'));
-    console.log(chalk.dim('(Your LinkedIn account must be at least 1 year old)\n'));
+    console.log(chalk.dim('(LinkedIn email must be verified)\n'));
 
     try {
       await performLinkedInAuth(linkedinClientId);
@@ -137,19 +131,11 @@ program
   .action((options) => {
     console.log(chalk.bold('\n⚙️  opengig configuration\n'));
 
-    const vars = [
-      ['OPENGIG_SUPABASE_URL', process.env.OPENGIG_SUPABASE_URL],
-      ['OPENGIG_SUPABASE_ANON_KEY', process.env.OPENGIG_SUPABASE_ANON_KEY ? '***set***' : undefined],
-      ['OPENGIG_LINKEDIN_CLIENT_ID', process.env.OPENGIG_LINKEDIN_CLIENT_ID],
-      ['ANTHROPIC_API_KEY', process.env.ANTHROPIC_API_KEY ? '***set***' : undefined],
-    ];
+    // Show current config (defaults are built-in)
+    console.log(chalk.green('✓') + ' Supabase: ' + chalk.dim('configured (built-in)'));
+    console.log(chalk.green('✓') + ' LinkedIn OAuth: ' + chalk.dim('configured (built-in)'));
 
-    vars.forEach(([name, value]) => {
-      const status = value ? chalk.green('✓') : chalk.red('✗');
-      console.log(`${status} ${name}: ${value || chalk.dim('not set')}`);
-    });
-
-    console.log(chalk.dim('\nSet these in your shell profile or .env file\n'));
+    console.log(chalk.dim('\nAll required settings have defaults. Just run `opengig auth` to get started!\n'));
   });
 
 program.parse();

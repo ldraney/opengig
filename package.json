@@ -8,6 +8,11 @@
     "opengig-mcp": "./dist/mcp-server.js"
   },
   "type": "module",
+  "files": [
+    "dist",
+    "README.md",
+    "CLAUDE.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsx src/index.ts",
