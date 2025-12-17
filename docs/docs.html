@@ -286,6 +286,7 @@
                 <a href="#hiring">Hiring Talent</a>
                 <a href="#messaging">Messaging</a>
                 <a href="#sharing-contacts">Sharing Contacts</a>
+                <a href="#saved-searches">Saved Searches</a>
             </div>
             <div class="sidebar-section">
                 <h3>Reference</h3>
@@ -463,6 +464,42 @@ Mike will receive your contact info and can reach out directly.</code></pre>
                 Once you have each other's contact info, you negotiate and pay directly. opengig never takes a cut.
             </div>
 
+            <h2 id="saved-searches">Saved Searches</h2>
+            <p>Save your search criteria to quickly re-run searches and get notified of new matches:</p>
+
+            <pre><code>You: Save this search as "React Remote Jobs"
+
+Claude: Done! I've saved your search with these criteria:
+- Type: Jobs
+- Skills: React, TypeScript
+- Remote: Yes
+- Rate: $80-100/hr
+
+You'll be notified when new matching listings are posted.</code></pre>
+
+            <h3>Managing Saved Searches</h3>
+            <pre><code>You: Show my saved searches
+
+Claude: You have 2 saved searches:
+
+1. **React Remote Jobs**
+   - Skills: React, TypeScript
+   - Remote only, $80-100/hr
+   - Last checked: 2 hours ago
+
+2. **DevOps Talent**
+   - Skills: AWS, Terraform
+   - Any location
+
+You: Run the first one
+
+Claude: Found 3 new matches for "React Remote Jobs"...</code></pre>
+
+            <div class="callout callout-info">
+                <strong>Listing Expiration</strong>
+                Listings automatically expire after 30 days. You can renew them anytime by saying "renew my listing" or checking your listings with "show my listings".
+            </div>
+
             <h2 id="tools">MCP Tools Reference</h2>
             <p>opengig provides these tools to Claude Code:</p>
 
@@ -480,11 +517,11 @@ Mike will receive your contact info and can reach out directly.</code></pre>
                     </tr>
                     <tr>
                         <td><code>create_listing</code></td>
-                        <td>Post a job or availability listing</td>
+                        <td>Post a job or availability listing (expires in 30 days)</td>
                     </tr>
                     <tr>
                         <td><code>search_listings</code></td>
-                        <td>Search for jobs or available talent</td>
+                        <td>Search for jobs or talent with advanced filters</td>
                     </tr>
                     <tr>
                         <td><code>get_conversations</code></td>
@@ -504,11 +541,35 @@ Mike will receive your contact info and can reach out directly.</code></pre>
                     </tr>
                     <tr>
                         <td><code>get_my_listings</code></td>
-                        <td>View your active listings</td>
+                        <td>View your listings with expiration status</td>
+                    </tr>
+                    <tr>
+                        <td><code>renew_listing</code></td>
+                        <td>Renew a listing for 30 more days</td>
                     </tr>
                     <tr>
                         <td><code>deactivate_listing</code></td>
                         <td>Remove one of your listings</td>
+                    </tr>
+                    <tr>
+                        <td><code>save_search</code></td>
+                        <td>Save search criteria for alerts</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_saved_searches</code></td>
+                        <td>View your saved searches</td>
+                    </tr>
+                    <tr>
+                        <td><code>run_saved_search</code></td>
+                        <td>Run a saved search and get matches</td>
+                    </tr>
+                    <tr>
+                        <td><code>delete_saved_search</code></td>
+                        <td>Delete a saved search</td>
+                    </tr>
+                    <tr>
+                        <td><code>get_notifications</code></td>
+                        <td>View recent notifications</td>
                     </tr>
                 </tbody>
             </table>

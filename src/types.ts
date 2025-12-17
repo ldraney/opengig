@@ -75,3 +75,32 @@ export interface Session {
   refresh_token?: string;
   expires_at: string;
 }
+
+export interface SavedSearch {
+  id: string;
+  user_id: string;
+  name: string;
+  search_type: 'jobs' | 'talent';
+  query?: string;
+  skills_filter: string[];
+  rate_min?: number;
+  rate_max?: number;
+  remote_only: boolean;
+  location?: string;
+  notify_email: boolean;
+  last_checked_at: string;
+  created_at: string;
+  active: boolean;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: 'new_match' | 'message_received' | 'listing_expiring' | 'contact_shared';
+  title: string;
+  body: string;
+  metadata: Record<string, unknown>;
+  email_sent: boolean;
+  sent_at?: string;
+  created_at: string;
+}

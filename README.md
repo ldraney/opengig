@@ -29,7 +29,7 @@ Want me to help you reach out?
 
 We just connect people. Payment happens between you.
 
-## Current Status: Production Ready (v0.2.0)
+## Current Status: Production Ready (v0.3.0)
 
 **What's working:**
 - npm package published (`npx opengig`)
@@ -95,14 +95,20 @@ Then just talk:
 | Tool | Description |
 |------|-------------|
 | `auth_status` | Check login state and profile |
-| `create_listing` | Post a job or availability |
-| `search_listings` | Find jobs or talent |
+| `create_listing` | Post a job or availability (expires in 30 days) |
+| `search_listings` | Find jobs or talent (with advanced filters) |
 | `get_conversations` | List message threads |
 | `send_message` | Message someone |
 | `get_messages` | Read a conversation |
 | `share_contact` | Share email/phone/LinkedIn |
-| `get_my_listings` | View your listings |
+| `get_my_listings` | View your listings (with expiration status) |
+| `renew_listing` | Renew a listing for 30 more days |
 | `deactivate_listing` | Remove a listing |
+| `save_search` | Save search criteria for alerts |
+| `get_saved_searches` | View your saved searches |
+| `run_saved_search` | Run a saved search |
+| `delete_saved_search` | Delete a saved search |
+| `get_notifications` | View recent notifications |
 
 ## Trust Model
 
@@ -130,11 +136,11 @@ Then just talk:
 - [x] Landing page ([ldraney.github.io/opengig](https://ldraney.github.io/opengig/))
 - [x] Documentation site ([docs](https://ldraney.github.io/opengig/docs.html))
 
-### Phase 4: Growth Features
-- [ ] Email notifications
-- [ ] Saved searches / alerts
-- [ ] Listing expiration & renewal
-- [ ] Advanced search filters
+### Phase 4: Growth Features ✅
+- [x] Email notifications (infrastructure ready, requires Resend API key)
+- [x] Saved searches / alerts
+- [x] Listing expiration & renewal (30-day auto-expire)
+- [x] Advanced search filters (rate range, recency, location)
 
 ### Phase 5: Monetization
 - [ ] Sponsored listings (pay to boost)

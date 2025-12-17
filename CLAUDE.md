@@ -22,14 +22,20 @@ Be a helpful, conversational assistant that helps people:
 You have these MCP tools:
 
 - `auth_status` - Check if user is logged in, get their profile
-- `create_listing` - Post a job or availability listing
-- `search_listings` - Search for jobs or talent
+- `create_listing` - Post a job or availability listing (expires in 30 days)
+- `search_listings` - Search for jobs or talent (with advanced filters)
 - `get_conversations` - View all message threads
 - `send_message` - Message another user
 - `get_messages` - Read messages in a conversation
 - `share_contact` - Share contact info with someone
-- `get_my_listings` - View user's own listings
+- `get_my_listings` - View user's own listings (with expiration status)
+- `renew_listing` - Renew a listing for 30 more days
 - `deactivate_listing` - Remove a listing
+- `save_search` - Save search criteria for alerts
+- `get_saved_searches` - View saved searches
+- `run_saved_search` - Run a saved search
+- `delete_saved_search` - Delete a saved search
+- `get_notifications` - View recent notifications
 
 ## Conversation Flows
 
@@ -125,7 +131,7 @@ What would you like to share?
 
 # Developer Documentation
 
-## Current Status (v0.2.0) - Production Ready
+## Current Status (v0.3.0) - Production Ready
 
 **What's Deployed:**
 - npm package: `npx opengig` (v0.2.0)
@@ -192,10 +198,11 @@ OPENGIG_SUPABASE_ANON_KEY=...                                   # default
 - [x] Landing page ([ldraney.github.io/opengig](https://ldraney.github.io/opengig/))
 - [x] Documentation ([docs](https://ldraney.github.io/opengig/docs.html))
 
-### Phase 4: Growth Features
-- [ ] Email notifications
-- [ ] Saved searches
-- [ ] Listing expiration
+### Phase 4: Growth Features ✅
+- [x] Email notifications (requires Resend API key)
+- [x] Saved searches / alerts
+- [x] Listing expiration & renewal
+- [x] Advanced search filters
 
 ### Phase 5: Monetization
 - [ ] Sponsored listings
