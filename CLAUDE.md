@@ -159,6 +159,22 @@ opengig/
 └── CLAUDE.md           # This file
 ```
 
+## How It Works
+
+`npx opengig` does **not** pass a custom system prompt to Claude. Instead:
+
+1. **CLI** (`src/index.ts`) handles LinkedIn OAuth, then spawns `claude` (the Claude Code CLI)
+2. **CLAUDE.md** - Claude Code automatically reads this file as instructions from the working directory
+3. **MCP config** - Written to `~/.claude/claude_mcp_config.json`, tells Claude Code to load our MCP server
+4. **MCP tools** - Defined in `mcp-server.ts`, become available to Claude during the session
+
+This means the "system prompt" is really just this file (CLAUDE.md) + tool descriptions in the MCP server. There's no programmatic system prompt parameter - it's all convention-based.
+
+**Key files:**
+- `CLAUDE.md` → Instructions for Claude (you're reading it)
+- `src/mcp-server.ts` → Tool definitions with descriptions
+- `src/index.ts:63` → Where `claude` gets spawned
+
 ## Quick Setup (For Development)
 
 ```bash
