@@ -34,7 +34,7 @@ We just connect people. Payment happens between you.
 **What's working:**
 - npm package published (`npx opengig`)
 - LinkedIn OAuth via Supabase Auth (OIDC)
-- MCP server with 9 marketplace tools
+- MCP server with 15 marketplace tools
 - Supabase backend with RLS policies working
 - All CRUD operations functional
 
@@ -164,13 +164,13 @@ npm run dev
 opengig/
 ├── src/
 │   ├── index.ts        # CLI launcher
-│   ├── mcp-server.ts   # MCP server (9 tools)
+│   ├── mcp-server.ts   # MCP server (15 tools)
 │   ├── types.ts        # TypeScript types
 │   └── lib/
 │       └── supabase.ts # Database + sessions
 ├── supabase/
 │   ├── migrations/     # Database schema
-│   └── functions/      # Edge functions (linkedin-auth)
+│   └── functions/      # Edge functions (send-notifications, ai-match)
 ├── .mcp.json           # Claude Code MCP config
 ├── CLAUDE.md           # AI assistant instructions
 └── README.md           # You are here
