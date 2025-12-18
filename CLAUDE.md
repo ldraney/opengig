@@ -139,7 +139,7 @@ What would you like to share?
 - MCP server with 15 marketplace tools
 - Supabase backend with RLS policies working
 - Database triggers sync auth users to app users
-- Email notifications infrastructure (requires Resend API key)
+- In-session notifications via `get_notifications` MCP tool
 
 ## Architecture
 
@@ -153,7 +153,7 @@ opengig/
 │       └── supabase.ts # Database client + Supabase Auth session management
 ├── supabase/
 │   ├── migrations/     # Database schema (001-005)
-│   └── functions/      # Edge functions (send-notifications)
+│   └── functions/      # Edge functions (linkedin-auth)
 ├── docs/               # Landing page & documentation
 ├── .mcp.json           # MCP server config for Claude Code
 └── CLAUDE.md           # This file
@@ -217,11 +217,19 @@ OPENGIG_SUPABASE_ANON_KEY=...                                   # default
 - [x] Documentation ([docs](https://ldraney.github.io/opengig/docs.html))
 
 ### Phase 4: Growth Features ✅
-- [x] Email notifications (requires Resend API key)
+- [x] In-session notifications (via MCP)
 - [x] Saved searches / alerts
 - [x] Listing expiration & renewal
 - [x] Advanced search filters
 
-### Phase 5: Monetization
+### Phase 5: Communities
+- [ ] Communities table + RLS policies
+- [ ] Community membership (join, leave, roles)
+- [ ] Welcome messages (markdown, shown by Claude on join)
+- [ ] MCP tools: `search_communities`, `join_community`, `get_my_communities`
+- [ ] Community-scoped listings (optional filter)
+
+### Phase 6: Monetization
 - [ ] Sponsored listings
+- [ ] Premium communities
 - **Never transaction fees**

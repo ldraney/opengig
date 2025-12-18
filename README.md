@@ -137,14 +137,21 @@ Then just talk:
 - [x] Documentation site ([docs](https://ldraney.github.io/opengig/docs.html))
 
 ### Phase 4: Growth Features ✅
-- [x] Email notifications (infrastructure ready, requires Resend API key)
+- [x] In-session notifications (via `get_notifications` MCP tool)
 - [x] Saved searches / alerts
 - [x] Listing expiration & renewal (30-day auto-expire)
 - [x] Advanced search filters (rate range, recency, location)
 
-### Phase 5: Monetization
+### Phase 5: Communities
+- [ ] Communities table + RLS policies
+- [ ] Community membership (join, leave, roles)
+- [ ] Welcome messages (markdown, shown by Claude on join)
+- [ ] MCP tools: `search_communities`, `join_community`, `get_my_communities`
+- [ ] Community-scoped listings (optional filter)
+
+### Phase 6: Monetization
 - [ ] Sponsored listings (pay to boost)
-- [ ] Featured placement in search
+- [ ] Premium communities
 - **Never transaction fees**
 
 ## Contributing
@@ -170,7 +177,7 @@ opengig/
 │       └── supabase.ts # Database + sessions
 ├── supabase/
 │   ├── migrations/     # Database schema
-│   └── functions/      # Edge functions (send-notifications, ai-match)
+│   └── functions/      # Edge functions (linkedin-auth)
 ├── .mcp.json           # Claude Code MCP config
 ├── CLAUDE.md           # AI assistant instructions
 └── README.md           # You are here
